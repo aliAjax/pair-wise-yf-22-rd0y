@@ -57,6 +57,16 @@ backend/src/routes, controllers, services, models, repositories, middlewares, co
 - WorkOrderStatus: constants/WorkOrderStatus、types/WorkOrderStatus、constructors、logTemplates、errorMessages、筛选器、展示组件/控制器均有引用。
 - InspectionResultStatus: constants/InspectionResultStatus、types/InspectionResultStatus、constructors、logTemplates、errorMessages、筛选器、展示组件/控制器均有引用。
 - DefectSeverity: constants/DefectSeverity、types/DefectSeverity、constructors、logTemplates、errorMessages、筛选器、展示组件/控制器均有引用。
+- GaugeStatus / GaugeCheckResult / ReportHandling / BatchReleaseStatus: constants 下独立文件，被 GaugeService、QualityInspectionService、ProductBatchService、GaugeDtoFactory、QualityInspectionDtoFactory、Formatters 共同引用。
+
+## 量具校验与终检联动
+
+- `POST /api/quality-inspection/submit`：提交终检结果时按 `gaugeNo` 检查量具校准日期与停用状态。量具正常则报告 `PASS` 并放行批次；校准过期（`EXPIRED`）或已停用（`DISABLED`）时报告保留为 `RECHECK` / `PENDING_REVIEW`，批次保持 `WAITING`。
+- 同一批次再次提交会复用待复核报告：量具重新校准后再次提交即可得出合格结论并放行批次。
+- `GET /api/quality-inspection/{id}`：检验详情返回量具状态（`gaugeStatus`/`gaugeStatusText`）、报告处理（`reportHandling`）和批次放行结果（`batchRelease`）。
+- `POST /api/gauge/{gaugeNo}/recalibrate`：量具重新校准（入参 `calibrationDueDate`，格式 `yyyy-MM-dd`），同时恢复为 `ACTIVE`。
+- `POST /api/gauge/{gaugeNo}/disable`：停用量具；`GET /api/gauge` 查看全部量具当前状态。
+- 种子量具：`GA-001` 正常、`GA-002` 校准过期、`GA-003` 已停用；种子批次：`B2026-001`、`B2026-002`（均为 `WAITING`）。
 
 ## 为什么会牵一发动全身
 
